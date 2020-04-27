@@ -1,0 +1,14 @@
+# Other
+*.DS_Store
+
+### IntelliJ IDEA
+*.iml
+*.ipr
+*.iws
+.idea/
+/out/
+.idea_modules/
+.vscode
+
+# Ignore vim swap files
+*.swp
