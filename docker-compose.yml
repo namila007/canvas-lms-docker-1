@@ -1,0 +1,50 @@
+version: "3.3"
+services:
+  web:
+    image: gracepoint/canvas-lms:production
+    depends_on:
+      - postgres
+      - redis
+      - db_setup
+    environment: &ENV
+      AWS_ACCESS_KEY_ID: foobar
+      AWS_SECRET_ACCESS_KEY: foobar
+      CANVAS_DOMAIN: localhost
+      CANVAS_ENCRYPTION_KEY: fooooooooooooooooooooooobarrrrrrrr
+      CANVAS_S3_BUCKET_NAME: some-s3-bucket
+      CANVAS_S3_BUCKET_REGION: us-east-1
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: canvas
+      DB_USER: canvas
+      DB_PASSWORD: "password"
+      LOG_LEVEL: ERROR
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "80:80"
+
+  db_setup:
+    image: gracepoint/canvas-lms:production
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      <<: *ENV
+      CANVAS_LMS_ADMIN_EMAIL: "no-reply@gpmail.org"
+      CANVAS_LMS_ADMIN_PASSWORD: "this_is_not_a_real_password"
+      CANVAS_LMS_ACCOUNT_NAME: "this_is_not_a_real_account"
+      CANVAS_LMS_STATS_COLLECTION: "opt_out"
+    command: bundle exec rake db:initial_setup
+
+  postgres:
+    image: postgres:12.2-alpine
+    environment:
+      POSTGRES_DB: canvas
+      POSTGRES_USER: canvas
+      POSTGRES_PASSWORD: "password"
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:5.0.9-alpine

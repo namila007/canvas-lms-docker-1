@@ -1,0 +1,70 @@
+name: 'CI'
+on:
+  - pull_request
+jobs:
+  publish:
+    name: 'test_and_publish'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        canvas_lms_release: ["2020-04-25.05"]
+
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v2
+
+      - name: 'Checkout canvas-ltm from release'
+        uses: actions/checkout@v2
+        with:
+          repository: instructure/canvas-lms
+          ref: release/${{ matrix.canvas_lms_release }}
+          path: canvas-lms
+          fetch-depth: 1
+
+      - name: 'Build canvas-ltm from release'
+        run: |
+          # Add configuration with container-friendly configuration
+          rm -rf canvas-lms/config/*.yml.example
+          cp -r config/. canvas-lms/config/
+
+          # Build image
+          docker build -f canvas-lms/Dockerfile -t gracepoint/canvas-lms:production canvas-lms
+
+      - name: 'Verify Image'
+        run: |
+          # Setup datastores
+          docker-compose up -d postgres
+          docker-compose up -d redis
+          scripts/tcp_ready_check.sh localhost 5432 # Waiting for Postgres to be ready
+
+          # Seed data
+          docker-compose up db_setup
+
+          # Startup canvas-lms
+          docker-compose up -d web
+
+          # Verify canvas-lms can start up correctly
+          wget --retry-connrefused --waitretry=5 --timeout=5 --tries 20 --quiet --output-document=- localhost:80/health_check
+
+      - name: 'Tag and Publish'
+        if: github.ref == 'refs/heads/master'
+        env:
+          DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN_KTHAM }}
+          DOCKER_HUB_USER: ktham
+        run: |
+          # Replaces dashes with periods in Docker tag name
+          IMAGE_VERSION=$(sed 's/-/./g' <<< ${{ matrix.canvas_lms_release }})
+
+          IMAGE="ktham/canvas-lms:$IMAGE_VERSION"
+
+          # Docker login to Github Packages
+          echo ${DOCKER_HUB_TOKEN} | docker login -u ${DOCKER_HUB_USER} --password-stdin
+
+          # Tag and Publish
+          docker tag gracepoint/canvas-lms:production $IMAGE
+          docker tag gracepoint/canvas-lms:production ktham/canvas-lms:latest
+          docker push $IMAGE
+          docker push ktham/canvas-lms:latest
+
+          # Remove docker config file just in case, for security reasons
+          sudo rm -rf /home/runner/.docker/config.json
