@@ -62,7 +62,7 @@ jobs:
           # Tag and Publish
           docker tag ${{ secrets.DOCKER_HUB_USER }}/canvas-lms:production $IMAGE
           # docker tag gracepoint/canvas-lms:production canvas-lms:latest
-          docker push $IMAGE
+          docker push ${{ secrets.DOCKER_HUB_USER }}/$IMAGE
           # docker push ktham/canvas-lms:latest
 
           # Remove docker config file just in case, for security reasons
