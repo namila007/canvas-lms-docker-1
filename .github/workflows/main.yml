@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        canvas_lms_release: ["2020-04-25.05"]
+        canvas_lms_release: ["2021-09-15.01"]
 
     steps:
       - name: 'Checkout'
