@@ -60,7 +60,7 @@ jobs:
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_HUB_USER }} --password-stdin
 
           # Tag and Publish
-          docker tag ${{ secrets.DOCKER_HUB_USER }}/canvas-lms:production $IMAGE
+          docker tag ${{ secrets.DOCKER_HUB_USER }}/canvas-lms:production ${{ secrets.DOCKER_HUB_USER }}/$IMAGE
           # docker tag gracepoint/canvas-lms:production canvas-lms:latest
           docker push ${{ secrets.DOCKER_HUB_USER }}/$IMAGE
           # docker push ktham/canvas-lms:latest
