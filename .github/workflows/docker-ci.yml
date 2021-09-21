@@ -30,7 +30,7 @@ jobs:
           cp -r config/. canvas-lms/config/
 
           # Build image
-          docker build -f canvas-lms/Dockerfile -t canvas-lms:production canvas-lms
+          docker build -f canvas-lms/Dockerfile -t ${{ secrets.DOCKER_HUB_USER }}/canvas-lms:production canvas-lms
 
      # - name: 'Verify Image'
       #  run: |
@@ -57,10 +57,10 @@ jobs:
           IMAGE="canvas-lms:$IMAGE_VERSION"
 
           # Docker login to Github Packages
-          echo ${DOCKER_HUB_TOKEN} | docker login -u ${DOCKER_HUB_USER} --password-stdin
+          echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_HUB_USER }} --password-stdin
 
           # Tag and Publish
-          docker tag canvas-lms:production $IMAGE
+          docker tag ${{ secrets.DOCKER_HUB_USER }}/canvas-lms:production $IMAGE
           # docker tag gracepoint/canvas-lms:production canvas-lms:latest
           docker push $IMAGE
           # docker push ktham/canvas-lms:latest
